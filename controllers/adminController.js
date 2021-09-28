@@ -1,5 +1,6 @@
-const Product = require("../models/productModel");
-const ProductMongo = require("../models/productMongoModel");
+const Product = require("../models/json/productModel");
+const ProductMongo = require("../models/mongodb/productMongoModel");
+const ProductMongooseModel = require("../models/mongoose/productMongooseModel");
 
 exports.getAddProduct = (req, res, next) => {
     res.render("admin/edit-product", {
@@ -14,9 +15,13 @@ exports.getAddProduct = (req, res, next) => {
 
 exports.postAddProduct = (req, res, next) => {
     const { title, price, imageUrl, description } = req.body;
-    const product = new ProductMongo(title, imageUrl, description, price);
+    const product = new ProductMongooseModel({
+        title,
+        imageUrl,
+        description,
+        price,
+    });
     product.save();
-    res.setHeader("Content-Type", "text/html");
     res.redirect("/products");
 };
 

@@ -1,12 +1,13 @@
 const express = require("express");
 const path = require("path");
 const cookieParser = require("cookie-parser");
+const mongoose = require("mongoose");
 
 const adminRouter = require("./routes/adminRouter");
 const shopRouter = require("./routes/shopRouter");
 const errorController = require("./controllers/error");
 const connectDatabase = require("./util/database");
-const UserMongo = require("./models/userMongoModel");
+const UserMongo = require("./models/mongodb/userMongoModel");
 
 const app = express();
 
@@ -28,7 +29,8 @@ app.use(shopRouter);
 app.use(errorController.get404);
 
 connectDatabase.connect((client) => {
-    // let user = new UserMongo("YasinV", "veliyev.yasin@gmail.com");
-    // user.save();
+    mongoose.connect("mongodb://localhost:27017/shop", () =>
+        console.log("Connected")
+    );
     app.listen(3000);
 });

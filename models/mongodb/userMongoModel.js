@@ -1,4 +1,4 @@
-const connectDatabase = require("../util/database");
+const connectDatabase = require("../../util/database");
 const ObjectID = require("mongodb").ObjectID;
 
 class User {

@@ -1,8 +1,8 @@
-const Product = require("../models/productModel");
-const Cart = require("../models/cartModel");
-const ProductMongo = require("../models/productMongoModel");
-const CartMongo = require("../models/cartMongoModel");
-const UserMango = require("../models/userMongoModel");
+const Product = require("../models/json/productModel");
+const Cart = require("../models/json/cartModel");
+const ProductMongo = require("../models/mongodb/productMongoModel");
+const CartMongo = require("../models/mongodb/cartMongoModel");
+const UserMango = require("../models/mongodb/userMongoModel");
 
 async function ProductsInChart(userId) {
     let carts = await CartMongo.fetchAll(userId);
