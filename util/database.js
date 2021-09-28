@@ -6,7 +6,6 @@ let _db;
 exports.connect = (calback) => {
     MongoDbClient.connect("mongodb://localhost:27017/shop")
         .then((client) => {
-            console.log("Connected");
             _db = client.db();
             calback(client);
         })

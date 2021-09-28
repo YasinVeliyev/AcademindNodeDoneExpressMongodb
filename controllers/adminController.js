@@ -46,7 +46,7 @@ exports.getEditProduct = async (req, res, next) => {
 };
 
 exports.getProducts = async (req, res, next) => {
-    let products = await ProductMongo.fetchAll();
+    let products = await ProductMongooseModel.find({});
     return res.render("admin/products", {
         prods: products,
         pageTitle: "Admin Products",

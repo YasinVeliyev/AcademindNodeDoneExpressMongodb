@@ -28,9 +28,15 @@ app.use(shopRouter);
 
 app.use(errorController.get404);
 
-connectDatabase.connect((client) => {
-    mongoose.connect("mongodb://localhost:27017/shop", () =>
-        console.log("Connected")
-    );
-    app.listen(3000);
+connectDatabase.connect(() => {
+    console.log("Mongodb");
+});
+
+mongoose.connect("mongodb://localhost:27017/shop", (err) => {
+    if (err) {
+        console.log(err);
+    } else {
+        console.log("Connected");
+        app.listen(3000);
+    }
 });
