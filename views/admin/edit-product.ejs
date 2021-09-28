@@ -1,0 +1,18 @@
+<%- include('../includes/head.ejs',{pageTitle}) %>
+    <link rel="stylesheet" href="/css/forms.css">
+    <link rel="stylesheet" href="/css/product.css">
+</head>
+
+<body>
+   <%- include('../includes/navigation.ejs') %>
+
+    <main>
+        <% if (editMode) { %>
+            <%- include('../includes/editAndAddForm.ejs',{product}) %> 
+        <% }else { %>
+            <%- include('../includes/editAndAddForm.ejs') %> 
+            <% } %> 
+         
+       
+    </main>
+<%- include('../includes/end.ejs') %>
