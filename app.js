@@ -2,6 +2,13 @@ const express = require("express");
 const path = require("path");
 const cookieParser = require("cookie-parser");
 const mongoose = require("mongoose");
+const UserMongooseModel = require("./models/mongoose/userMongooseModel");
+const { sequelize } = require("./util/database");
+// UserMongooseModel.create({
+//     name: "Veliyev Yasin",
+//     email: "veliyev.yasin@gmail.com",
+//     cart: [],
+// });
 
 const adminRouter = require("./routes/adminRouter");
 const shopRouter = require("./routes/shopRouter");
@@ -19,7 +26,7 @@ app.use(express.static(path.join(__dirname, "public")));
 app.use(cookieParser());
 
 app.use(async (req, res, next) => {
-    let user = await UserMongo.findById("614f7f49c32b18111e56af0f");
+    let user = await UserMongooseModel.findOne();
     res.cookie("user", user);
     next();
 });
@@ -34,9 +41,10 @@ connectDatabase.connect(() => {
 
 mongoose.connect("mongodb://localhost:27017/shop", (err) => {
     if (err) {
-        console.log(err);
+        console.error(err);
     } else {
         console.log("Connected");
+
         app.listen(3000);
     }
 });

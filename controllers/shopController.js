@@ -1,57 +1,48 @@
 const Product = require("../models/json/productModel");
 const Cart = require("../models/json/cartModel");
 const ProductMongo = require("../models/mongodb/productMongoModel");
+const ProductMongoose = require("../models/mongoose/productMongooseModel");
 const CartMongo = require("../models/mongodb/cartMongoModel");
 const UserMango = require("../models/mongodb/userMongoModel");
-
-async function ProductsInChart(userId) {
-    let carts = await CartMongo.fetchAll(userId);
-    let products;
-    let totalPrice = 0;
-    if (carts) {
-        products = await Promise.all(
-            carts.products.map(async (prod, index) => {
-                let product = await ProductMongo.findById(prod.productId);
-                product.id = index + 1;
-                product.qty = prod.qty;
-                totalPrice += prod.qty * product.price;
-                return product;
-            })
-        );
-    } else {
-        products = [];
-    }
-    return { products, totalPrice };
-}
+const userMongooseModel = require("../models/mongoose/userMongooseModel");
+const ProductMysqlModel = require("../models/mysql/productMysqlModel");
+const productSequelizeModel = require("../models/mysql/productSequelizeModel");
 
 exports.getProducts = async (req, res, next) => {
-    let products = await ProductMongo.fetchAll();
-    return res.render("shop/product-list", {
-        prods: products,
-        pageTitle: "All Products",
-        path: "/",
-        hasProducts: products.length > 0,
-        activeShop: true,
-        productCSS: true,
-    });
+    productSequelizeModel
+        .findAll()
+        .then((products) => {
+            return res.render("shop/product-list", {
+                prods: products,
+                pageTitle: "All Products",
+                path: "/",
+                hasProducts: products.length > 0,
+                activeShop: true,
+                productCSS: true,
+            });
+        })
+        .catch((err) => console.error(err));
 };
 
 exports.getIndex = async (req, res, next) => {
-    let products = await ProductMongo.fetchAll();
-    return res.render("shop/index", {
-        prods: products,
-        pageTitle: "Shop",
-        path: "/",
-        hasProducts: products.length > 0,
-        activeShop: true,
-        productCSS: true,
-    });
+    productSequelizeModel
+        .findAll()
+        .then((products) => {
+            return res.render("shop/index", {
+                prods: products,
+                pageTitle: "Shop",
+                path: "/",
+                hasProducts: products.length > 0,
+                activeShop: true,
+                productCSS: true,
+            });
+        })
+        .catch((err) => console.error(err));
 };
 
 exports.getCart = async (req, res, next) => {
-    let { products: prods, totalPrice } = await ProductsInChart(
-        req.cookies.user._id
-    );
+    let user = await userMongooseModel.findById(req.cookies.user._id);
+    let [prods, totalPrice] = user.getItems();
     res.render("shop/cart", {
         prods,
         totalPrice,
@@ -62,7 +53,11 @@ exports.getCart = async (req, res, next) => {
 };
 
 exports.postCart = async (req, res, nex) => {
-    let chart = CartMongo.updateCart(req.cookies.user._id, req.body.productId);
+    let user = await userMongooseModel.findById(req.cookies.user._id);
+    let product = ProductMongoose.findById(req.body.productId, (err, data) => {
+        user.addItemtoChart(data);
+    });
+
     res.redirect("/cart");
 };
 
@@ -83,16 +78,20 @@ exports.getOrders = (req, res, next) => {
 
 exports.getProductDetailsById = async (req, res, next) => {
     const { productId } = req.params;
-    let product = await ProductMongo.findById(productId);
-    res.render("shop/product-detail", {
-        product,
-        pageTitle: product.title,
-        path: `/products`,
+    productSequelizeModel.findByPk(productId).then((product) => {
+        console.log(product.dataValues);
+        return res.render("shop/product-detail", {
+            product,
+            pageTitle: product.title,
+            path: `/products`,
+        });
     });
 };
 
 exports.postCartDeleteItem = (req, res, next) => {
-    CartMongo.findAndDelete(req.cookies.user._id, req.body.productId);
+    userMongooseModel.findById(req.cookies.user._id, (err, user) => {
+        user.deleteItemFromChart(req.body.productId);
+    });
     res.redirect("/cart");
 };
 

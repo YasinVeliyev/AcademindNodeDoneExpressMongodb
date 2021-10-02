@@ -30,7 +30,7 @@
                             <td scope="col"><%= product.qty %></td>
                             <td>
                                 <form action="/cart-delete-item" method="POST">
-                                    <input type="text" name="productId" id="productId" hidden value=<%= product._id %>>
+                                    <input type="text" name="productId" id="productId" hidden value=<%= product.id %>>
                                     <button class="btn" type="submit">Delete</button>
                                 </form>
                             </td>
