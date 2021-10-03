@@ -53,6 +53,6 @@ exports.mysqlConnector = mysql
         host: "localhost",
         user: "root",
         database: "node-complete",
-        password: "Python321-",
+        password: "-",
     })
     .promise();
