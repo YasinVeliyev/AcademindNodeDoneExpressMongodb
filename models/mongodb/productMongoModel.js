@@ -15,8 +15,8 @@ class Product {
         return db
             .collection("products")
             .insertOne(this)
-            .then((result) => console.log(result))
-            .catch((err) => console.error(err));
+            .then(result => console.log(result))
+            .catch(err => console.error(err));
     }
     static fetchAll() {
         let db = connectDatabase.getDb();
@@ -24,10 +24,10 @@ class Product {
             .collection("products")
             .find()
             .toArray()
-            .then((products) => {
+            .then(products => {
                 return products;
             })
-            .catch((err) => console.error(err));
+            .catch(err => console.error(err));
     }
 
     static async findById(prodId) {

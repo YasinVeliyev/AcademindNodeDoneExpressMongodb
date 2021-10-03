@@ -45,7 +45,7 @@ userSchema.methods.getItems = function () {
 };
 
 userSchema.methods.addItemtoChart = function (item) {
-    let product = this.cart.filter((prod) => {
+    let product = this.cart.filter(prod => {
         if (prod.productId._id.toString() == item._id.toString()) {
             prod.quantity++;
             return prod;
@@ -58,9 +58,7 @@ userSchema.methods.addItemtoChart = function (item) {
 };
 
 userSchema.methods.deleteItemFromChart = function (productId) {
-    this.cart = this.cart.filter(
-        (prod) => prod.productId._id.toString() != productId
-    );
+    this.cart = this.cart.filter(prod => prod.productId._id.toString() != productId);
     this.save();
 };
 

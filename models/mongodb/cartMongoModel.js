@@ -4,9 +4,7 @@ const ObjectID = require("mongodb").ObjectID;
 class Cart {
     static async updateCart(userId, productId) {
         let db = connectDatabase.getDb();
-        let userChart = await db
-            .collection("cart")
-            .findOne({ userId: new ObjectID(userId) });
+        let userChart = await db.collection("cart").findOne({ userId: new ObjectID(userId) });
 
         if (userChart) {
             let product = userChart.products.find((product, index) => {
@@ -23,10 +21,7 @@ class Cart {
                 });
             }
 
-            db.collection("cart").updateOne(
-                { userId: new ObjectID(userId) },
-                { $set: userChart }
-            );
+            db.collection("cart").updateOne({ userId: new ObjectID(userId) }, { $set: userChart });
         } else {
             db.collection("cart").insertOne({
                 userId: new ObjectID(userId),
@@ -37,19 +32,13 @@ class Cart {
 
     static async fetchAll(userId) {
         let db = connectDatabase.getDb();
-        return await db
-            .collection("cart")
-            .findOne({ userId: new ObjectID(userId) });
+        return await db.collection("cart").findOne({ userId: new ObjectID(userId) });
     }
 
     static async findAndDelete(userId, productId) {
         let db = connectDatabase.getDb();
-        let userChart = await db
-            .collection("cart")
-            .findOne({ userId: new ObjectID(userId) });
-        userChart.products = userChart.products.filter(
-            (chart) => chart.productId != productId
-        );
+        let userChart = await db.collection("cart").findOne({ userId: new ObjectID(userId) });
+        userChart.products = userChart.products.filter(chart => chart.productId != productId);
 
         db.collection("cart").updateMany(
             {

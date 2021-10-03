@@ -7,13 +7,13 @@ const CartMongo = require("../models/mongodb/cartMongoModel");
 
 let _db;
 
-exports.connect = (calback) => {
+exports.connect = calback => {
     MongoDbClient.connect("mongodb://localhost:27017/shop")
-        .then((client) => {
+        .then(client => {
             _db = client.db();
             calback(client);
         })
-        .catch((err) => console.error(err));
+        .catch(err => console.error(err));
 };
 
 exports.getDb = () => {
