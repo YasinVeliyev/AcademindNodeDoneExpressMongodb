@@ -1,7 +1,10 @@
 const express = require("express");
 const path = require("path");
 const cookieParser = require("cookie-parser");
+const session = require("express-session");
 const mongoose = require("mongoose");
+const MongoDbStore = require("connect-mongodb-session")(session);
+
 const UserMongooseModel = require("./models/mongoose/userMongooseModel");
 const { sequelize } = require("./util/database");
 const productSequelizeModel = require("./models/mysql/productSequelizeModel");
@@ -31,6 +34,10 @@ const Cart = require("./models/json/cartModel");
 const CartItem = require("./models/mysql/cart-item");
 
 const app = express();
+const store = new MongoDbStore({
+    uri: "mongodb://localhost:27017/shop",
+    collection: "sessions",
+});
 
 app.set("view engine", "ejs");
 app.set("views", "views");
@@ -38,14 +45,18 @@ app.set("views", "views");
 app.use(express.urlencoded({ extended: false }));
 app.use(express.static(path.join(__dirname, "public")));
 app.use(cookieParser());
-
+app.use(
+    session({
+        secret: "my secret",
+        resave: false,
+        saveUninitialized: false,
+        store,
+    })
+);
 // sequelize.sync();
 
 app.use(async (req, res, next) => {
-    let user = await userSequelizeModel.findByPk(1);
-    // let user = await UserMongooseModel.findOne();
-    user.createCart();
-    req.user = user;
+    res.locals.isAuthenticated = req.session.isLoggedIn;
     next();
 });
 app.use("/admin", adminRouter);

@@ -73,11 +73,14 @@ exports.postEditProduct = (req, res, next) => {
     const { id, title, price, imageUrl, description } = req.body;
     productSequelizeModel
         .update({ title, price, imageUrl, description }, { where: { id } })
-        .then((result) => res.redirect("/admin/products"))
+        .then((result) =>
+            res.redirect("/admin/products", { isAuthenticated: req.isLoggedIn })
+        )
         .catch((err) => console.error(err));
 };
 
 exports.postDeleteProduct = async (req, res, next) => {
     await productSequelizeModel.destroy({ where: { id: req.body.id } });
-    res.redirect("/admin/products");
+
+    res.redirect("/admin/products", { isAuthenticated: req.isLoggedIn });
 };

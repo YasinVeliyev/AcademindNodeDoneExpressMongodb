@@ -9,6 +9,7 @@ const ProductMysqlModel = require("../models/mysql/productMysqlModel");
 const productSequelizeModel = require("../models/mysql/productSequelizeModel");
 const orderItem = require("../models/mysql/order-item");
 const orderSequelizeModel = require("../models/mysql/orderSequelizeModel");
+const userSequelizeModel = require("../models/mysql/userSequelizeModel");
 
 exports.getProducts = async (req, res, next) => {
     productSequelizeModel
@@ -43,8 +44,9 @@ exports.getIndex = async (req, res, next) => {
 };
 
 exports.getCart = async (req, res, next) => {
-    req.user
-        .getCart()
+    userSequelizeModel
+        .findByPk(req.session.user.id)
+        .then((user) => user.getCart())
         .then((cart) => {
             return cart.getProducts().then((products) => {
                 console.log(products);
@@ -55,7 +57,7 @@ exports.getCart = async (req, res, next) => {
                 res.render("shop/cart", {
                     prods: products,
                     totalPrice,
-                    userId: req.cookies.user._id,
+                    userId: req.session.user.id,
                     path: "/cart",
                     pageTitle: "Your Cart",
                 });
@@ -67,8 +69,10 @@ exports.getCart = async (req, res, next) => {
 exports.postCart = async (req, res, nex) => {
     let fetchedCart;
     const { productId } = req.body;
-    req.user
-        .getCart()
+
+    userSequelizeModel
+        .findByPk(req.session.user.id)
+        .then((user) => user.getCart())
         .then((cart) => {
             fetchedCart = cart;
             return cart.getProducts({ where: { id: req.body.productId } });
@@ -122,8 +126,9 @@ exports.getProductDetailsById = async (req, res, next) => {
 };
 
 exports.postCartDeleteItem = (req, res, next) => {
-    req.user
-        .getCart()
+    userSequelizeModel
+        .findByPk(req.session.user.id)
+        .then((user) => user.getCart())
         .then((cart) => {
             return cart.getProducts({ where: { id: req.body.productId } });
         })
@@ -137,10 +142,9 @@ exports.postCartDeleteItem = (req, res, next) => {
 
 exports.createOrder = async (req, res, next) => {
     try {
-        let cart = await req.user.getCart();
-        console.log("Cart", cart);
+        let cart = await req.session.user.getCart();
         let products = await cart.getProducts();
-        let order = await req.user.createOrder();
+        let order = await req.session.user.createOrder();
         order.addProducts(
             products.map((product) => {
                 product.orderItem = { quantity: product.cartItem.quantity };
@@ -156,7 +160,8 @@ exports.createOrder = async (req, res, next) => {
 };
 
 exports.getOrders = async (req, res, next) => {
-    let orders = await req.user.getOrders({ include: ["products"] });
+    let user = await userSequelizeModel.findByPk(req.session.user.id);
+    let orders = await user.getOrders({ include: ["products"] });
     res.render("shop/orders", {
         path: "/orders",
         pageTitle: "Your Orders",
