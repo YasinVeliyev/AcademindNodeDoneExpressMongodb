@@ -7,6 +7,8 @@ const UserMango = require("../models/mongodb/userMongoModel");
 const userMongooseModel = require("../models/mongoose/userMongooseModel");
 const ProductMysqlModel = require("../models/mysql/productMysqlModel");
 const productSequelizeModel = require("../models/mysql/productSequelizeModel");
+const orderItem = require("../models/mysql/order-item");
+const orderSequelizeModel = require("../models/mysql/orderSequelizeModel");
 
 exports.getProducts = async (req, res, next) => {
     productSequelizeModel
@@ -41,22 +43,55 @@ exports.getIndex = async (req, res, next) => {
 };
 
 exports.getCart = async (req, res, next) => {
-    let user = await userMongooseModel.findById(req.cookies.user._id);
-    let [prods, totalPrice] = user.getItems();
-    res.render("shop/cart", {
-        prods,
-        totalPrice,
-        userId: req.cookies.user._id,
-        path: "/cart",
-        pageTitle: "Your Cart",
-    });
+    req.user
+        .getCart()
+        .then((cart) => {
+            return cart.getProducts().then((products) => {
+                console.log(products);
+                let totalPrice = products.reduce(
+                    (a, b) => a + b.price * b.cartItem.quantity,
+                    0
+                );
+                res.render("shop/cart", {
+                    prods: products,
+                    totalPrice,
+                    userId: req.cookies.user._id,
+                    path: "/cart",
+                    pageTitle: "Your Cart",
+                });
+            });
+        })
+        .catch((err) => console.error(err));
 };
 
 exports.postCart = async (req, res, nex) => {
-    let user = await userMongooseModel.findById(req.cookies.user._id);
-    let product = ProductMongoose.findById(req.body.productId, (err, data) => {
-        user.addItemtoChart(data);
-    });
+    let fetchedCart;
+    const { productId } = req.body;
+    req.user
+        .getCart()
+        .then((cart) => {
+            fetchedCart = cart;
+            return cart.getProducts({ where: { id: req.body.productId } });
+        })
+        .then((products) => {
+            let product;
+            if (products.length > 0) {
+                product = products[0];
+            }
+            let newQuantity = 1;
+            if (product) {
+                newQuantity = product.cartItem.quantity + 1;
+            }
+            return productSequelizeModel
+                .findByPk(productId)
+                .then((product) => {
+                    fetchedCart.addProduct(product, {
+                        through: { quantity: newQuantity },
+                    });
+                })
+                .catch((err) => console.error(err));
+        })
+        .catch((err) => console.error(err));
 
     res.redirect("/cart");
 };
@@ -69,7 +104,6 @@ exports.getCheckout = (req, res, next) => {
 };
 
 exports.getOrders = (req, res, next) => {
-    console.log(req.cookies);
     res.render("shop/orders", {
         path: "/orders",
         pageTitle: "Your Cart",
@@ -79,7 +113,6 @@ exports.getOrders = (req, res, next) => {
 exports.getProductDetailsById = async (req, res, next) => {
     const { productId } = req.params;
     productSequelizeModel.findByPk(productId).then((product) => {
-        console.log(product.dataValues);
         return res.render("shop/product-detail", {
             product,
             pageTitle: product.title,
@@ -89,16 +122,44 @@ exports.getProductDetailsById = async (req, res, next) => {
 };
 
 exports.postCartDeleteItem = (req, res, next) => {
-    userMongooseModel.findById(req.cookies.user._id, (err, user) => {
-        user.deleteItemFromChart(req.body.productId);
-    });
-    res.redirect("/cart");
+    req.user
+        .getCart()
+        .then((cart) => {
+            return cart.getProducts({ where: { id: req.body.productId } });
+        })
+        .then((products) => {
+            const product = products[0];
+            return product.cartItem.destroy();
+        })
+        .then((result) => res.redirect("/cart"))
+        .catch((err) => console.error(err));
 };
 
 exports.createOrder = async (req, res, next) => {
-    let user = await UserMango.findById(req.body.userId);
-    let data = await ProductsInChart(req.body.userId);
-    data.user = user;
-    await CartMongo.addOrder(data);
-    res.redirect("/cart");
+    try {
+        let cart = await req.user.getCart();
+        console.log("Cart", cart);
+        let products = await cart.getProducts();
+        let order = await req.user.createOrder();
+        order.addProducts(
+            products.map((product) => {
+                product.orderItem = { quantity: product.cartItem.quantity };
+                return product;
+            })
+        );
+
+        await cart.setProducts(null);
+        res.redirect("/orders");
+    } catch (error) {
+        console.error(error);
+    }
+};
+
+exports.getOrders = async (req, res, next) => {
+    let orders = await req.user.getOrders({ include: ["products"] });
+    res.render("shop/orders", {
+        path: "/orders",
+        pageTitle: "Your Orders",
+        orders,
+    });
 };

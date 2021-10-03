@@ -27,7 +27,7 @@
                             <td scope="col"><img src="<%= product.imageUrl %>" alt="<%= product.title %>" class='w-25'></td>
                             <td scope="col"><%= product.description %></td>
                             <td scope="col"><%= product.price %></td>
-                            <td scope="col"><%= product.qty %></td>
+                            <td scope="col"><%= product.cartItem.quantity %></td>
                             <td>
                                 <form action="/cart-delete-item" method="POST">
                                     <input type="text" name="productId" id="productId" hidden value=<%= product.id %>>

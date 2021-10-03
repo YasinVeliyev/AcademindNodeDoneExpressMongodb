@@ -35,9 +35,7 @@ exports.postAddProduct = (req, res, next) => {
 
 exports.getEditProduct = async (req, res, next) => {
     const editMode = req.query.editMode || false;
-    const product = await ProductMongooseModel.findByIdAndUpdate(
-        req.params.productId
-    );
+    const product = await productSequelizeModel.findByPk(req.params.productId);
     if (!product) {
         return res.status(404).render("404", {
             pageTitle: "Page Not Found",
@@ -73,18 +71,13 @@ exports.getProducts = async (req, res, next) => {
 
 exports.postEditProduct = (req, res, next) => {
     const { id, title, price, imageUrl, description } = req.body;
-    ProductMongooseModel.findByIdAndUpdate(
-        id,
-        { title, price, imageUrl, description },
-        { new: true },
-        (err, data) => {
-            console.log(data);
-        }
-    );
-    res.redirect("/admin/products");
+    productSequelizeModel
+        .update({ title, price, imageUrl, description }, { where: { id } })
+        .then((result) => res.redirect("/admin/products"))
+        .catch((err) => console.error(err));
 };
 
 exports.postDeleteProduct = async (req, res, next) => {
-    await ProductMongooseModel.findByIdAndDelete(req.body.id);
+    await productSequelizeModel.destroy({ where: { id: req.body.id } });
     res.redirect("/admin/products");
 };
