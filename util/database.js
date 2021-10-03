@@ -43,7 +43,7 @@ exports.ProductsInChart = async function (userId) {
     return { products, totalPrice };
 };
 
-exports.sequelize = new Sequelize("node-complete", "root", "Python321-", {
+exports.sequelize = new Sequelize("node-complete", "root", "-", {
     dialect: "mysql",
     host: "localhost",
 });
