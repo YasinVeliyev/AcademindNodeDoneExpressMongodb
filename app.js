@@ -10,11 +10,6 @@ const cartSequelizeModel = require("./models/mysql/cartSequelizeModel");
 const cartItem = require("./models/mysql/cart-item");
 const orderItem = require("./models/mysql/order-item");
 const orderSequelizeModel = require("./models/mysql/orderSequelizeModel");
-// UserMongooseModel.create({
-//     name: "Veliyev Yasin",
-//     email: "veliyev.yasin@gmail.com",
-//     cart: [],
-// });
 
 userSequelizeModel.hasOne(cartSequelizeModel);
 cartSequelizeModel.belongsTo(userSequelizeModel);
@@ -28,6 +23,7 @@ orderSequelizeModel.belongsToMany(productSequelizeModel, {
 
 const adminRouter = require("./routes/adminRouter");
 const shopRouter = require("./routes/shopRouter");
+const authRouter = require("./routes/authRouter");
 const errorController = require("./controllers/error");
 const connectDatabase = require("./util/database");
 const UserMongo = require("./models/mongodb/userMongoModel");
@@ -54,7 +50,7 @@ app.use(async (req, res, next) => {
 });
 app.use("/admin", adminRouter);
 app.use(shopRouter);
-
+app.use(authRouter);
 app.use(errorController.get404);
 
 connectDatabase.connect(() => {
