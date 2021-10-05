@@ -6,12 +6,18 @@ const express = require("express");
 const adminController = require("../controllers/adminController");
 
 const router = express.Router();
+const userIsAuthenticated = (req, res, next) => {
+    if (!req.session.isLoggedIn) {
+        return res.redirect("/login");
+    }
+    next();
+};
 
-router.get("/add-product", adminController.getAddProduct);
-router.get("/edit-product/:productId", adminController.getEditProduct);
-router.post("/edit-product", adminController.postEditProduct);
-router.post("/delete-product", adminController.postDeleteProduct);
-router.get("/products", adminController.getProducts);
-router.post("/add-product", adminController.postAddProduct);
+router.get("/add-product", userIsAuthenticated, adminController.getAddProduct);
+router.get("/edit-product/:productId", userIsAuthenticated, adminController.getEditProduct);
+router.post("/edit-product", userIsAuthenticated, adminController.postEditProduct);
+router.post("/delete-product", userIsAuthenticated, adminController.postDeleteProduct);
+router.get("/products", userIsAuthenticated, adminController.getProducts);
+router.post("/add-product", userIsAuthenticated, adminController.postAddProduct);
 
 module.exports = router;

@@ -53,7 +53,7 @@ app.use(
         store,
     })
 );
-// sequelize.sync();
+// sequelize.sync({ force: true });
 
 app.use(async (req, res, next) => {
     res.locals.isAuthenticated = req.session.isLoggedIn;
@@ -68,7 +68,7 @@ connectDatabase.connect(() => {
     console.log("Mongodb");
 });
 
-mongoose.connect("mongodb://localhost:27017/shop", (err) => {
+mongoose.connect("mongodb://localhost:27017/shop", err => {
     if (err) {
         console.error(err);
     } else {

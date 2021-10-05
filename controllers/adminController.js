@@ -4,6 +4,7 @@ const ProductMongooseModel = require("../models/mongoose/productMongooseModel");
 const ProductMysqlModel = require("../models/mysql/productMysqlModel");
 const productSequelizeModel = require("../models/mysql/productSequelizeModel");
 
+
 exports.getAddProduct = (req, res, next) => {
     res.render("admin/edit-product", {
         pageTitle: "Add Product",
@@ -18,19 +19,9 @@ exports.getAddProduct = (req, res, next) => {
 exports.postAddProduct = (req, res, next) => {
     const { title, price, imageUrl, description } = req.body;
     productSequelizeModel
-        .create({
-            title,
-            price,
-            imageUrl,
-            description,
-        })
+        .create({ title, price, imageUrl, description })
         .then(res.redirect("/products"))
         .catch(err => console.error(err));
-    // const product = new ProductMysqlModel(title, imageUrl, description, price);
-    // product
-    //     .save()
-    //     .then(res.redirect("/products"))
-    //     .catch((err) => console.log(err));
 };
 
 exports.getEditProduct = async (req, res, next) => {
