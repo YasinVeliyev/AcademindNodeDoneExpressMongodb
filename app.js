@@ -4,6 +4,8 @@ const cookieParser = require("cookie-parser");
 const session = require("express-session");
 const mongoose = require("mongoose");
 const MongoDbStore = require("connect-mongodb-session")(session);
+const csurf = require("csurf");
+const flash = require("connect-flash");
 
 const UserMongooseModel = require("./models/mongoose/userMongooseModel");
 const { sequelize } = require("./util/database");
@@ -38,7 +40,8 @@ const store = new MongoDbStore({
     uri: "mongodb://localhost:27017/shop",
     collection: "sessions",
 });
-
+const csrfProtection = csurf({ cookie: true });
+app.use(flash());
 app.set("view engine", "ejs");
 app.set("views", "views");
 
@@ -53,10 +56,15 @@ app.use(
         store,
     })
 );
-// sequelize.sync({ force: true });
+app.use(csrfProtection);
+// sequelize.sync();
 
 app.use(async (req, res, next) => {
     res.locals.isAuthenticated = req.session.isLoggedIn;
+    let token = req.csrfToken();
+    res.locals.csrfToken = token;
+    res.cookie("XSRF-TOKEN", token);
+    console.log(`${req.protocol}://${req.headers.host}${req.originalUrl}`);
     next();
 });
 app.use("/admin", adminRouter);

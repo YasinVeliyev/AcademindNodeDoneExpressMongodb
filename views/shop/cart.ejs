@@ -30,6 +30,7 @@
                             <td scope="col"><%= product.cartItem.quantity %></td>
                             <td>
                                 <form action="/cart-delete-item" method="POST">
+                                    <input type="hidden" name="_csrf" value="<%= locals.csrfToken %>" />
                                     <input type="text" name="productId" id="productId" hidden value=<%= product.id %>>
                                     <button class="btn" type="submit">Delete</button>
                                 </form>
@@ -43,6 +44,7 @@
                                 <td></td>
                                 <td scope='col' >
                                     <form action="/create-order" method="POST">
+                                        <input type="hidden" name="_csrf" value="<%= locals.csrfToken %>" />
                                         <button class="btn" type="submit">Buy</button>
                                         <input type="text" name="userId" id="userID" hidden value=<%= userId %>>
                                     </form>

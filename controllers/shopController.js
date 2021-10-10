@@ -38,6 +38,7 @@ exports.getIndex = async (req, res, next) => {
                 hasProducts: products.length > 0,
                 activeShop: true,
                 productCSS: true,
+                message: req.flash("info"),
             });
         })
         .catch(err => console.error(err));

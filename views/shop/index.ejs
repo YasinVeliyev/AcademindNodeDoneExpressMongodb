@@ -6,7 +6,9 @@
     <%- include('../includes/navigation.ejs') %>
 
     <main>
-       
+       <% if (message[0]) { %>
+        <span class="alert alert-info" role="alert"><%= message[0] %> </span>
+       <% } %>
         <% if (prods.length > 0) { %>
             <div class="grid">
                 <% for (let product of prods) { %>
