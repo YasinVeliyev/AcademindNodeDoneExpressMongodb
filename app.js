@@ -6,6 +6,7 @@ const mongoose = require("mongoose");
 const MongoDbStore = require("connect-mongodb-session")(session);
 const csurf = require("csurf");
 const flash = require("connect-flash");
+const multer = require("multer");
 
 const UserMongooseModel = require("./models/mongoose/userMongooseModel");
 const { sequelize } = require("./util/database");
@@ -40,12 +41,30 @@ const store = new MongoDbStore({
     uri: "mongodb://localhost:27017/shop",
     collection: "sessions",
 });
+
+const fileStorage = multer.diskStorage({
+    destination: (req, file, cb) => {
+        cb(null, "public/img");
+    },
+    filename: (req, file, cb) => {
+        cb(null, new Date().toISOString() + "-" + file.originalname);
+    },
+});
+const fileFilter = (req, file, cb) => {
+    if (file.mimetype === "image/png" || file.mimetype === "image/jpeg" || file.mimetype === "image/jpg");
+    {
+        return cb(null, true);
+    }
+    cb(null, false);
+};
+
 const csrfProtection = csurf({ cookie: true });
 app.use(flash());
 app.set("view engine", "ejs");
 app.set("views", "views");
 
 app.use(express.urlencoded({ extended: false }));
+app.use(multer({ storage: fileStorage, fileFilter }).single("image"));
 app.use(express.static(path.join(__dirname, "public")));
 app.use(cookieParser());
 app.use(
@@ -57,7 +76,7 @@ app.use(
     })
 );
 app.use(csrfProtection);
-// sequelize.sync();
+// sequelize.sync({ force: true });
 
 app.use(async (req, res, next) => {
     res.locals.isAuthenticated = req.session.isLoggedIn;
@@ -75,6 +94,7 @@ app.use(errorController.get404);
 connectDatabase.connect(() => {
     console.log("Mongodb");
 });
+// (async () => console.log(await productSequelizeModel.findAndCountAll({})))();
 
 mongoose.connect("mongodb://localhost:27017/shop", err => {
     if (err) {
@@ -85,3 +105,4 @@ mongoose.connect("mongodb://localhost:27017/shop", err => {
         app.listen(3000);
     }
 });
+// app.listen(3000);

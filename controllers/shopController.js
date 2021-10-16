@@ -1,3 +1,6 @@
+const fs = require("fs");
+const path = require("path");
+
 const Product = require("../models/json/productModel");
 const Cart = require("../models/json/cartModel");
 const ProductMongo = require("../models/mongodb/productMongoModel");
@@ -10,6 +13,7 @@ const productSequelizeModel = require("../models/mysql/productSequelizeModel");
 const orderItem = require("../models/mysql/order-item");
 const orderSequelizeModel = require("../models/mysql/orderSequelizeModel");
 const userSequelizeModel = require("../models/mysql/userSequelizeModel");
+const cartSequelizeModel = require("../models/mysql/cartSequelizeModel");
 
 exports.getProducts = async (req, res, next) => {
     productSequelizeModel
@@ -51,7 +55,6 @@ exports.getCart = async (req, res, next) => {
         .then(user => user.getCart())
         .then(cart => {
             return cart.getProducts().then(products => {
-                console.log(products);
                 let totalPrice = products.reduce((a, b) => a + b.price * b.cartItem.quantity, 0);
                 res.render("shop/cart", {
                     prods: products,
@@ -62,19 +65,41 @@ exports.getCart = async (req, res, next) => {
                 });
             });
         })
-        .catch(err => console.error(err));
+        .catch(err => {
+            res.render("shop/cart", {
+                prods: [],
+                userId: req.session.user.id,
+                path: "/cart",
+                pageTitle: "Your Cart",
+            });
+            console.error(err);
+        });
 };
 
 exports.postCart = async (req, res, nex) => {
     let fetchedCart;
+    let User;
     const { productId } = req.body;
-
     userSequelizeModel
         .findByPk(req.session.user.id)
-        .then(user => user.getCart())
+        .then(user => {
+            User = user;
+            return user.getCart();
+        })
         .then(cart => {
-            fetchedCart = cart;
-            return cart.getProducts({ where: { id: req.body.productId } });
+            if (cart) {
+                fetchedCart = cart;
+                return cart.getProducts({ where: { id: req.body.productId } });
+            } else {
+                let fetchedCart = cartSequelizeModel.create({ userId: User.id }).then(cart => {
+                    productSequelizeModel.findByPk(productId).then(product => {
+                        cart.addProduct(product, {
+                            through: { quantity: 1 },
+                        });
+                    });
+                });
+                return res.redirect("/cart");
+            }
         })
         .then(products => {
             let product;
@@ -106,7 +131,7 @@ exports.getCheckout = (req, res, next) => {
 exports.getOrders = (req, res, next) => {
     res.render("shop/orders", {
         path: "/orders",
-        pageTitle: "Your Cart",
+        pageTitle: "Your Orders",
     });
 };
 
@@ -164,4 +189,24 @@ exports.getOrders = async (req, res, next) => {
         pageTitle: "Your Orders",
         orders,
     });
+};
+
+exports.getInvoice = async (req, res, next) => {
+    const orderId = req.params.orderId;
+    let user = await userSequelizeModel.findByPk(req.session.user.id);
+    let orders = await user.getOrders({ include: ["products"] });
+    let order = orders.filter(order => order.id == orderId);
+    if (order.length > 0) {
+        const invoiceName = "invoice-" + orderId + ".pdf";
+        const invoicePath = path.join("data", "invoices", invoiceName);
+        fs.readFile(invoicePath, (err, data) => {
+            if (err) {
+                return next(err);
+            }
+            res.setHeader("Content-Type", "application/pdf");
+            res.setHeader("Content-Disposition", "inline");
+            res.send(data);
+        });
+    }
+    return next(new Error("No order"));
 };

@@ -2,7 +2,7 @@ const crypto = require("crypto");
 const userSequelizeModel = require("../models/mysql/userSequelizeModel");
 const bcrypt = require("bcryptjs");
 const { sendEmail } = require("../util/email");
-const { validationResult } = require("express-validator/check");
+const { validationResult } = require("express-validator");
 
 exports.getLogin = async (req, res, next) => {
     let messages = req.flash();

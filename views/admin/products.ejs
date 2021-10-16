@@ -27,10 +27,11 @@
                                     </p>
                                 </div>
                                 <div class="card__actions">
-                                    <a href="/admin/edit-product/<%= product.id %>?editMode=true" class="btn">Edit</a>
+                                    <a href="/admin/edit-product/<%= product.id %>?editMode=true" class="btn btn-info">Edit</a>
                                     <form action="/admin/delete-product" method="POST">
+                                        <input type="hidden" name="_csrf" value="<%= locals.csrfToken %>" />
                                         <input type="text" name="id" id="productId" hidden value=<%= product.id %>>
-                                        <button class="btn" type="submit">Delete</button>
+                                        <button class="btn btn-warning" type="submit">Delete</button>
                                     </form>
 
                                 </div>

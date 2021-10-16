@@ -1,7 +1,7 @@
 <% if (locals.isAuthenticated) { %>
 <form action="/add-to-cart" method="POST">
     <input type="hidden" name="_csrf" value="<%= locals.csrfToken %>" />
-    <button class="btn">Add to Cart</button>
+    <button class="btn btn-primary">Add to Cart</button>
     <input type="text" name="productId" id="productId" hidden value="<%= product.id %>" />
 </form>
 <% } %>

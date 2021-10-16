@@ -3,7 +3,7 @@ const path = require("path");
 const express = require("express");
 
 const shopController = require("../controllers/shopController");
-
+const middleware = require("../middleware/isAuth");
 const router = express.Router();
 
 router.get("/", shopController.getIndex);
@@ -15,4 +15,5 @@ router.get("/checkout", shopController.getCheckout);
 router.get("/products/:productId", shopController.getProductDetailsById);
 router.post("/cart-delete-item", shopController.postCartDeleteItem);
 router.post("/create-order", shopController.createOrder);
+router.get("/orders/:orderId", middleware.userIsAuthenticated, shopController.getInvoice);
 module.exports = router;
