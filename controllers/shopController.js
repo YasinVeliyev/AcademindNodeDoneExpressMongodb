@@ -128,13 +128,6 @@ exports.getCheckout = (req, res, next) => {
     });
 };
 
-exports.getOrders = (req, res, next) => {
-    res.render("shop/orders", {
-        path: "/orders",
-        pageTitle: "Your Orders",
-    });
-};
-
 exports.getProductDetailsById = async (req, res, next) => {
     const { productId } = req.params;
     productSequelizeModel.findByPk(productId).then(product => {
