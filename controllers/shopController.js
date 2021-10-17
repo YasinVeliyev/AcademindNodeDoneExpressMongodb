@@ -98,23 +98,19 @@ exports.getCart = async (req, res, next) => {
 exports.postCart = async (req, res, nex) => {
     const { productId } = req.body;
     let newQuantity = 1;
-    let product;
+    let product = await productSequelizeModel.findByPk(productId);
     const user = await userSequelizeModel.findByPk(req.session.user.id);
     let cart = await user.getCart();
     if (cart) {
         let products = await cart.getProducts({ where: { id: req.body.productId } });
         if (products.length > 0) {
             product = products[0];
-        }
-        if (product) {
             newQuantity = product.cartItem.quantity + 1;
         }
-        product = await productSequelizeModel.findByPk(productId);
     } else {
         cart = await cartSequelizeModel.create({ userId: req.session.user.id });
-        product = await productSequelizeModel.findByPk(productId);
     }
-    cart.addProduct(product, { through: { quantity: newQuantity } });
+    await cart.addProduct(product, { through: { quantity: newQuantity } });
     return res.redirect("/cart");
 };
 
