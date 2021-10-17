@@ -11,7 +11,7 @@ const router = express.Router();
 router.get("/add-product", middleware.userIsAuthenticated, adminController.getAddProduct);
 router.get("/edit-product/:productId", middleware.userIsAuthenticated, adminController.getEditProduct);
 router.post("/edit-product", middleware.userIsAuthenticated, adminController.postEditProduct);
-router.post("/delete-product", middleware.userIsAuthenticated, adminController.postDeleteProduct);
+router.delete("/product/:productId", middleware.userIsAuthenticated, adminController.deleteProduct);
 router.get("/products", middleware.userIsAuthenticated, adminController.getProducts);
 router.post("/add-product", middleware.userIsAuthenticated, adminController.postAddProduct);
 

@@ -15,31 +15,42 @@ const orderItem = require("../models/mysql/order-item");
 const orderSequelizeModel = require("../models/mysql/orderSequelizeModel");
 const userSequelizeModel = require("../models/mysql/userSequelizeModel");
 const cartSequelizeModel = require("../models/mysql/cartSequelizeModel");
+const paginate = require("../util/paginate");
 
 exports.getProducts = async (req, res, next) => {
-    productSequelizeModel
-        .findAll()
-        .then(products => {
-            return res.render("shop/product-list", {
-                prods: products,
-                pageTitle: "All Products",
-                path: "/",
-                hasProducts: products.length > 0,
-                activeShop: true,
-                productCSS: true,
-            });
-        })
-        .catch(err => console.error(err));
-};
-
-exports.getIndex = async (req, res, next) => {
+    let page = Number(req.query.page) || 1;
     try {
         let { count, rows: products } = await productSequelizeModel.findAndCountAll({
             where: {},
             limit: 4,
-            offset: (req.query.page - 1) * 4,
+            offset: (page - 1) * 4,
         });
-        console.log(count);
+        return res.render("shop/product-list", {
+            prods: products,
+            pageTitle: "All Products",
+            path: "/",
+            hasProducts: products.length > 0,
+            activeShop: true,
+            productCSS: true,
+            message: req.flash("info"),
+            paginate: paginate(page, 4, count),
+            currentPage: page,
+            pageCount: Math.round(count / 4),
+        });
+    } catch (err) {
+        console.error(err);
+    }
+};
+
+exports.getIndex = async (req, res, next) => {
+    let page = Number(req.query.page) || 1;
+
+    try {
+        let { count, rows: products } = await productSequelizeModel.findAndCountAll({
+            where: {},
+            limit: 4,
+            offset: (page - 1) * 4,
+        });
         return res.render("shop/index", {
             prods: products,
             pageTitle: "Shop",
@@ -48,24 +59,11 @@ exports.getIndex = async (req, res, next) => {
             activeShop: true,
             productCSS: true,
             message: req.flash("info"),
-            paginate: Math.ceil(count / 4),
-            currentPage: req.query.page,
+            paginate: paginate(page, 4, count),
+            currentPage: page,
+            pageCount: Math.round(count / 4),
         });
     } catch (err) {
-        // console.log(count);
-        // productSequelizeModel
-        //     .findAll()
-        //     .then(products => {
-        //         return res.render("shop/index", {
-        //             prods: products,
-        //             pageTitle: "Shop",
-        //             path: "/",
-        //             hasProducts: products.length > 0,
-        //             activeShop: true,
-        //             productCSS: true,
-        //             message: req.flash("info"),
-        //         });
-        //     })
         console.error(err);
     }
 };

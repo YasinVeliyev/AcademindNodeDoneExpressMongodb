@@ -70,8 +70,12 @@ exports.postEditProduct = (req, res, next) => {
         .catch(err => console.error(err));
 };
 
-exports.postDeleteProduct = async (req, res, next) => {
+exports.deleteProduct = async (req, res, next) => {
     console.log(req.body.id);
-    await productSequelizeModel.destroy({ where: { id: req.body.id } });
-    return res.status(302).redirect("/admin/products");
+    try {
+        await productSequelizeModel.destroy({ where: { id: req.params.productId } });
+        return res.status(200).json({ message: "Success" });
+    } catch (error) {
+        return res.status(500).json({ message: "Failed" });
+    }
 };
