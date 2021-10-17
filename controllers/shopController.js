@@ -69,7 +69,6 @@ exports.getIndex = async (req, res, next) => {
 };
 
 exports.getCart = async (req, res, next) => {
-    console.log(req.session.user.id);
     userSequelizeModel
         .findByPk(req.session.user.id)
         .then(user => user.getCart())
@@ -97,48 +96,29 @@ exports.getCart = async (req, res, next) => {
 };
 
 exports.postCart = async (req, res, nex) => {
-    let fetchedCart;
-    let User;
     const { productId } = req.body;
-    userSequelizeModel
-        .findByPk(req.session.user.id)
-        .then(user => {
-            User = user;
-            return user.getCart();
-        })
-        .then(cart => {
-            if (cart) {
-                fetchedCart = cart;
-                return cart.getProducts({ where: { id: req.body.productId } });
-            } else {
-                let fetchedCart = cartSequelizeModel.create({ userId: User.id }).then(cart => {
-                    productSequelizeModel.findByPk(productId).then(product => {
-                        cart.addProduct(product, {
-                            through: { quantity: 1 },
-                        });
-                    });
-                });
-                return res.redirect("/cart");
-            }
-        })
-        .then(products => {
-            let product;
-            if (products.length > 0) {
-                product = products[0];
-            }
-            let newQuantity = 1;
-            if (product) {
-                newQuantity = product.cartItem.quantity + 1;
-            }
-            return productSequelizeModel.findByPk(productId).then(product => {
-                fetchedCart.addProduct(product, {
-                    through: { quantity: newQuantity },
-                });
-            });
-        })
-        .catch(err => console.error(err));
-
-    res.redirect("/cart");
+    const user = await userSequelizeModel.findByPk(req.session.user.id);
+    const cart = await user.getCart();
+    if (cart) {
+        let products = await cart.getProducts({ where: { id: req.body.productId } });
+        let product;
+        if (products.length > 0) {
+            product = products[0];
+        }
+        let newQuantity = 1;
+        if (product) {
+            newQuantity = product.cartItem.quantity + 1;
+        }
+        productSequelizeModel.findByPk(productId).then(product => {
+            cart.addProduct(product, { through: { quantity: newQuantity } });
+            return res.redirect("/cart");
+        });
+    } else {
+        let cart = await cartSequelizeModel.create({ userId: req.session.user.id });
+        let product = await productSequelizeModel.findByPk(productId);
+        cart.addProduct(product, { through: { quantity: 1 } });
+    }
+    return res.redirect("/cart");
 };
 
 exports.getCheckout = (req, res, next) => {
@@ -195,6 +175,7 @@ exports.createOrder = async (req, res, next) => {
         );
 
         await cart.setProducts(null);
+        cart.destroy();
         res.redirect("/orders");
     } catch (error) {
         console.error(error);

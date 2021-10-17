@@ -30,11 +30,11 @@
                     </div>
                     
                     <div class="d-flex justify-content-center">
-                        <a href="/?page=1" class='btn m-1 btn-primary <%= currentPage==1?"disabled":"" %>'>First</a> 
+                        <a href="/products/?page=1" class='btn m-1 btn-primary <%= currentPage==1?"disabled":"" %>'>First</a> 
                         <% for( let page of paginate) { %>
-                            <a href="/?page=<%= page %>" class='btn btn-primary m-1 <%= page==currentPage?"disabled":"" %>'> <%= page %> </a> 
+                            <a href="/products/?page=<%= page %>" class='btn btn-primary m-1 <%= page==currentPage?"disabled btn-lg":"" %>'> <%= page %> </a> 
                         <% } %>
-                        <a href="/?page=<%= pageCount %>" class='btn m-1 btn-primary <%= currentPage==pageCount?"disabled":"" %>'>Last</a> 
+                        <a href="/products/?page=<%= pageCount %>" class='btn m-1 btn-primary  <%= currentPage==pageCount?"disabled ":"" %>'>Last</a> 
                     </div>
                     <% } else { %>
                         <h1>No Products Found!</h1>
