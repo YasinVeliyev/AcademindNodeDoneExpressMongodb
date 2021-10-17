@@ -10,9 +10,9 @@
         <span class="alert alert-info" role="alert"><%= message[0] %> </span>
        <% } %>
         <% if (prods.length > 0) { %>
-            <div class="grid">
+            <div class="grid m-0">
                 <% for (let product of prods) { %>
-                    <article class="card product-item">
+                    <article class="card product-item mt-1">
                         <header class="card__header">
                             <h1 class="product__title"><%= product.title %></h1>
                         </header>
@@ -31,6 +31,15 @@
                     </article>
                 <% } %>
             </div>
+            <div class="d-flex justify-content-center">
+                <a href="/?page=1" class='btn m-1 btn-primary <%= currentPage==1?"disabled":"" %>'>First</a> 
+                <% for( let page = 1; page<= paginate; page++ ) { %>
+                    <!-- <a href="">Alo</a> -->
+                    <a href="/?page=<%= page %>" class='btn btn-primary m-1 <%= page==currentPage?"disabled":"" %>'> <%= page %> </a> 
+                <% } %>
+                <a href="/?page=<%= paginate %>" class='btn m-1 btn-primary <%= currentPage==paginate?"disabled":"" %>'>Last</a> 
+            </div>
+            
         <% } else { %>
             <h1>No Products Found!</h1>
         <% } %>

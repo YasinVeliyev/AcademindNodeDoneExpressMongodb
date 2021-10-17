@@ -1,5 +1,6 @@
 const fs = require("fs");
 const path = require("path");
+const pdfkit = require("pdfkit");
 
 const Product = require("../models/json/productModel");
 const Cart = require("../models/json/cartModel");
@@ -32,20 +33,41 @@ exports.getProducts = async (req, res, next) => {
 };
 
 exports.getIndex = async (req, res, next) => {
-    productSequelizeModel
-        .findAll()
-        .then(products => {
-            return res.render("shop/index", {
-                prods: products,
-                pageTitle: "Shop",
-                path: "/",
-                hasProducts: products.length > 0,
-                activeShop: true,
-                productCSS: true,
-                message: req.flash("info"),
-            });
-        })
-        .catch(err => console.error(err));
+    try {
+        let { count, rows: products } = await productSequelizeModel.findAndCountAll({
+            where: {},
+            limit: 4,
+            offset: (req.query.page - 1) * 4,
+        });
+        console.log(count);
+        return res.render("shop/index", {
+            prods: products,
+            pageTitle: "Shop",
+            path: "/",
+            hasProducts: products.length > 0,
+            activeShop: true,
+            productCSS: true,
+            message: req.flash("info"),
+            paginate: Math.ceil(count / 4),
+            currentPage: req.query.page,
+        });
+    } catch (err) {
+        // console.log(count);
+        // productSequelizeModel
+        //     .findAll()
+        //     .then(products => {
+        //         return res.render("shop/index", {
+        //             prods: products,
+        //             pageTitle: "Shop",
+        //             path: "/",
+        //             hasProducts: products.length > 0,
+        //             activeShop: true,
+        //             productCSS: true,
+        //             message: req.flash("info"),
+        //         });
+        //     })
+        console.error(err);
+    }
 };
 
 exports.getCart = async (req, res, next) => {
@@ -195,18 +217,37 @@ exports.getInvoice = async (req, res, next) => {
     const orderId = req.params.orderId;
     let user = await userSequelizeModel.findByPk(req.session.user.id);
     let orders = await user.getOrders({ include: ["products"] });
-    let order = orders.filter(order => order.id == orderId);
-    if (order.length > 0) {
+    let ordersInvoice = [];
+    let totalPrice = 0;
+    orders.forEach(order => {
+        if (order.id == orderId) {
+            let products = order.dataValues.products.forEach(product => {
+                let { title, price } = product;
+                let quantity = product.orderItem.quantity;
+                totalPrice += price * quantity;
+                ordersInvoice.push({ title, price, quantity });
+            });
+        }
+    });
+    if (ordersInvoice.length > 0) {
         const invoiceName = "invoice-" + orderId + ".pdf";
         const invoicePath = path.join("data", "invoices", invoiceName);
-        fs.readFile(invoicePath, (err, data) => {
-            if (err) {
-                return next(err);
-            }
-            res.setHeader("Content-Type", "application/pdf");
-            res.setHeader("Content-Disposition", "inline");
-            res.send(data);
+        const pdfDoc = new pdfkit();
+        pdfDoc.pipe(fs.createWriteStream(invoicePath));
+        res.setHeader("Content-Type", "application/pdf");
+        res.setHeader("Content-Disposition", "inline");
+
+        pdfDoc.fontSize(26).text("Invoice", {
+            underline: true,
         });
+        pdfDoc.text("________________________________");
+        ordersInvoice.forEach(order => {
+            pdfDoc.text(order.title + " - " + order.quantity + " x " + order.price + " $");
+        });
+        pdfDoc.text("________________________________");
+        pdfDoc.text("Total Price: " + " = " + totalPrice + " $");
+        pdfDoc.end();
+        return pdfDoc.pipe(res);
     }
     return next(new Error("No order"));
 };
