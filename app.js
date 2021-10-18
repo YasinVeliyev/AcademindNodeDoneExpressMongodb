@@ -7,6 +7,7 @@ const MongoDbStore = require("connect-mongodb-session")(session);
 const csurf = require("csurf");
 const flash = require("connect-flash");
 const multer = require("multer");
+require("dotenv").config();
 
 const UserMongooseModel = require("./models/mongoose/userMongooseModel");
 const { sequelize } = require("./util/database");
@@ -84,6 +85,7 @@ app.use(async (req, res, next) => {
     res.locals.csrfToken = token;
     res.cookie("XSRF-TOKEN", token);
     console.log(`${req.protocol}://${req.headers.host}${req.originalUrl}`);
+    console.log(`${req.protocol}://${req.headers.host}/checkout/success`);
     next();
 });
 app.use("/admin", adminRouter);

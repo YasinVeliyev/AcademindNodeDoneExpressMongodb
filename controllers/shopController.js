@@ -1,6 +1,7 @@
 const fs = require("fs");
 const path = require("path");
 const pdfkit = require("pdfkit");
+const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
 
 const Product = require("../models/json/productModel");
 const Cart = require("../models/json/cartModel");
@@ -114,11 +115,39 @@ exports.postCart = async (req, res, nex) => {
     return res.redirect("/cart");
 };
 
-exports.getCheckout = (req, res, next) => {
-    res.render("shop/checkout", {
-        path: "/checkout",
-        pageTitle: "Checkout",
-    });
+exports.getCheckout = async (req, res, next) => {
+    try {
+        let user = await userSequelizeModel.findByPk(req.session.user.id);
+        let cart = await user.getCart();
+        let products = await cart.getProducts();
+        let totalPrice = products.reduce((a, b) => a + b.price * b.cartItem.quantity, 0);
+        let session = await stripe.checkout.sessions.create({
+            payment_method_types: ["card"],
+            line_items: products.map(product => {
+                // console.log(product);
+                return {
+                    name: product.title,
+                    description: product.description,
+                    amount: product.price * 100,
+                    currency: "usd",
+                    quantity: product.cartItem.quantity,
+                };
+            }),
+            success_url: `${req.protocol}://${req.headers.host}/checkout/success`,
+            cancel_url: `${req.protocol}://${req.headers.host}/checkout/cancel`,
+        });
+        res.render("shop/checkout", {
+            products,
+            totalPrice,
+            userId: req.session.user.id,
+            sessionId: session.id,
+            path: "/checkout",
+            pageTitle: "Checkout",
+        });
+    } catch (err) {
+        next(err);
+        console.log(err);
+    }
 };
 
 exports.getProductDetailsById = async (req, res, next) => {
@@ -207,7 +236,16 @@ exports.getInvoice = async (req, res, next) => {
         });
         pdfDoc.text("________________________________");
         ordersInvoice.forEach(order => {
-            pdfDoc.text(order.title + " - " + order.quantity + " x " + order.price + " $");
+            pdfDoc.text(
+                order.title +
+                    " - " +
+                    order.quantity +
+                    " x " +
+                    order.price +
+                    " $ " +
+                    " = " +
+                    order.quantity * order.price
+            );
         });
         pdfDoc.text("________________________________");
         pdfDoc.text("Total Price: " + " = " + totalPrice + " $");
