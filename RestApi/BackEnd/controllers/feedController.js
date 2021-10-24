@@ -1,8 +1,10 @@
 const { validationResult } = require("express-validator");
+const mongoose = require("mongoose");
 
 const Post = require("../models/postModel");
 const User = require("../models/userModel");
-const mongoose = require("mongoose");
+const io = require("../socket");
+
 // Post.updateMany({}, { creator: new mongoose.Types.ObjectId("6174608701815c325dd37028") }, (err, data) => {
 //     if (err) {
 //         console.log(err);
@@ -51,9 +53,9 @@ exports.createPost = async (req, res, next) => {
     try {
         const post = await Post.create({ title, content, imageUrl, creator: mongoose.Types.ObjectId(req.userId) });
         const user = await User.findById(req.userId);
-        console.log(post._id);
         user.posts.push(post._id);
         await user.save();
+        io.getIO().emit("posts", { action: "create", post: await post.populate("creator") });
         return res.status(201).json({
             message: "Post created successfully!",
             post,
@@ -113,6 +115,7 @@ exports.editPost = async (req, res, next) => {
         console.log(error);
         return next(error);
     }
+    io.getIO().emit("posts", { action: "update", post: updatedPost });
     return res.status(200).json({ message: "Post updated", post: updatedPost });
 };
 

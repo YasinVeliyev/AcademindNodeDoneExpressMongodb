@@ -17,7 +17,7 @@ const fileStorage = multer.diskStorage({
 });
 
 const fileFilter = (req, file, cb) => {
-    if (file.mimetype === "image/png" || file.mimetype === "image/jpg" || file.mimetype === "image/jpeg") {
+    if (file.mimetype === "image/png" || file.mimetype === "image/jpg" || file.mimetype === "image/jpeg"||file.mimetype==="image/svg+xml") {
         cb(null, true);
     } else {
         cb(null, false);
@@ -49,6 +49,10 @@ app.use((error, req, res, next) => {
 mongoose
     .connect("mongodb://localhost:27017/restapi?readPreference=primary&appname=MongoDB%20Compass&ssl=false")
     .then(result => {
-        app.listen(8080);
+        const server = app.listen(8080);
+        const io = require("./socket").init(server);
+        io.on("connection", socket => {
+            console.log("Client connected");
+        });
     })
     .catch(err => console.log(err));
