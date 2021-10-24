@@ -1,0 +1,45 @@
+<%- include('../includes/head.ejs',{pageTitle}) %>
+    <link rel="stylesheet" href="/css/forms.css">
+    <link rel="stylesheet" href="/css/auth.css">
+</head>
+
+<body>
+   <%- include('../includes/navigation.ejs') %>
+
+    <main>
+       
+        <section class='row'>
+            <% if (messages) { %>
+                <% for( category in messages) { %>
+                    <% for( msg of messages[category] ) { %>
+                       <div class='alert alert-<%=  category%>' role="alert"> <%=  msg%></div>%> 
+                    <% } %>
+                <% } %>
+                
+            <% } %>
+            <div class='col-5 ' style="margin: auto;">
+              
+                <form class="row" action="/login" method="POST" >  
+                    <input type="hidden" name="_csrf" value="<%= locals.csrfToken %>" /> 
+                    <div class="mb-3">
+                        <label for="email" class="form-label mb-1">Email</label>
+                        <input type="text" name="email" id="email" class="form-control mt-1" value="<%= oldInput.email %>" required>  
+                    </div>
+                    <div class="mb-3">
+                        <label for="password" class="form-label mb-1">Password</label>
+                        <input type="password" name="password" id="password" class="form-control mt-1" value="<%= oldInput.password %>" required>
+                    </div>        
+                    <button class="btn btn-info" type="submit">Login</button>   
+                </form>
+                <div class="row">
+                    <a href="/reset" class="link-info mt-1" style="text-decoration: none;padding: 0;"><small class='ml-0'>Forgot Password ?</small> </a>
+                </div>
+            </div>
+            
+            
+            
+        </section>
+
+        
+    </main>
+<%- include('../includes/end.ejs') %>
