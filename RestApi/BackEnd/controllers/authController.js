@@ -22,7 +22,9 @@ exports.login = async (req, res, next) => {
     try {
         let user = await User.findOne({ email });
         if (user && user.checkPassword(password)) {
-            const token = jwt.sign({ email, userId: user._id.toString() }, "secret", { expiresIn: "1h" });
+            const token = jwt.sign({ email, userId: user._id.toString(), status: user.status }, "secret", {
+                expiresIn: "1h",
+            });
             res.status(200).json({ token, userId: user._id.toString() });
         } else {
             const error = new Error("User is not exist or Wrong password");
@@ -33,4 +35,16 @@ exports.login = async (req, res, next) => {
         error.statusCode = 500;
         next(error);
     }
+};
+
+exports.updateStatus = (req, res, next) => {
+    console.log(req.body);
+    User.findByIdAndUpdate(req.userId, { status: req.body.status }, { new: true })
+        .then(user => {
+            return res.status(201).json({ user });
+        })
+        .catch(err => {
+            err.statusCode = 500;
+            next(err);
+        });
 };

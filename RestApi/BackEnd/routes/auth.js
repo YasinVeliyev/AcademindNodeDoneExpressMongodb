@@ -3,6 +3,7 @@ const { body } = require("express-validator");
 
 const User = require("../models/userModel");
 const authController = require("../controllers/authController");
+const isAuthenticated = require("../middleware/isAuthenticated");
 
 const router = Router();
 
@@ -21,5 +22,5 @@ let validator = [
 
 router.put("/signup", validator, authController.signup);
 router.post("/login", authController.login);
-
+router.patch("/updateStatus", isAuthenticated, authController.updateStatus);
 module.exports = router;

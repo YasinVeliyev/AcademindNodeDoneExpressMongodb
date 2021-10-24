@@ -15,11 +15,17 @@ const postSchema = new mongoose.Schema(
             required: true,
         },
         creator: {
-            type: Object,
-            required: String,
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "User",
+            required: true,
         },
     },
     { timestamps: true }
 );
+
+postSchema.pre(/^find/, async function (next) {
+    this.populate("creator");
+    return next();
+});
 
 module.exports = mongoose.model("Post", postSchema);

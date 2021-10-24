@@ -1,6 +1,15 @@
 const { validationResult } = require("express-validator");
 
 const Post = require("../models/postModel");
+const User = require("../models/userModel");
+const mongoose = require("mongoose");
+// Post.updateMany({}, { creator: new mongoose.Types.ObjectId("6174608701815c325dd37028") }, (err, data) => {
+//     if (err) {
+//         console.log(err);
+//     } else {
+//         console.log(data);
+//     }
+// });
 
 exports.getPosts = async (req, res, next) => {
     const currentPage = req.query.page || 1;
@@ -10,7 +19,12 @@ exports.getPosts = async (req, res, next) => {
         .skip((currentPage - 1) * perPage)
         .limit(perPage)
         .then(posts => {
-            res.status(200).json({ message: "Fetched posts successfully.", posts: posts, totalItems });
+            res.status(200).json({
+                message: "Fetched     successfully.",
+                posts: posts,
+                totalItems,
+                status: req.status,
+            });
         })
         .catch(err => {
             if (!err.statusCode) {
@@ -35,11 +49,14 @@ exports.createPost = async (req, res, next) => {
     const imageUrl = req.file.path;
     const { content, title } = req.body;
     try {
-        const post = await Post.create({ title, content, imageUrl, creator: { name: "Yasin" } });
-
+        const post = await Post.create({ title, content, imageUrl, creator: mongoose.Types.ObjectId(req.userId) });
+        const user = await User.findById(req.userId);
+        console.log(post._id);
+        user.posts.push(post._id);
+        await user.save();
         return res.status(201).json({
             message: "Post created successfully!",
-            post: post,
+            post,
         });
     } catch (err) {
         if (!err.statusCode) {
@@ -68,7 +85,6 @@ exports.getPost = async (req, res, next) => {
 };
 
 exports.editPost = async (req, res, next) => {
-    console.log(req.body);
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
         const error = new Error("Validation failed, entered data is incorrect.");
@@ -86,10 +102,13 @@ exports.editPost = async (req, res, next) => {
         console.log(error);
         return next(error);
     }
-    let updatedPost = await Post.findByIdAndUpdate(postId, { content, title, imageUrl }, { new: true });
-    console.log(updatedPost);
+    let updatedPost = await Post.findOneAndUpdate(
+        { creator: mongoose.Types.ObjectId(req.userId), _id: mongoose.Types.ObjectId(postId) },
+        { content, title, imageUrl },
+        { new: true }
+    );
     if (!updatedPost) {
-        const error = new Error("Could not fint post.");
+        const error = new Error("Could not fint post or You are not authorized.");
         error.statusCode = 404;
         console.log(error);
         return next(error);
@@ -99,7 +118,11 @@ exports.editPost = async (req, res, next) => {
 
 exports.deletePost = async (req, res, next) => {
     try {
-        await Post.findByIdAndRemove(req.params.postId);
+        let post = await Post.findOneAndDelete({ _id: req.params.postId, creator: req.userId });
+        if (post) {
+            return res.status(200).json({ post, message: "Succes" });
+        }
+        return res.status(403).json({ message: "You are not authorized" });
     } catch (error) {
         error.statusCode = 404;
         next(error);
