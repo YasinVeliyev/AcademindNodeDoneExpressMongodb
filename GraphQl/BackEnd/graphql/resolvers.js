@@ -153,21 +153,48 @@ module.exports = {
     },
 
     async deletePost({ id }, req) {
-        console.log(id, req);
         if (!req.isAuth) {
             const error = new Error("Not Authenticated");
             error.code = 401;
             throw error;
         }
-        let deletedPost = await Post.findOneAndDelete({ _id: id, creator: req.userId });
-        clearImage(deletedPost.imageUrl);
-        console.log(deletedPost);
-        if (!deletedPos) {
+        try {
+            let deletedPost = await Post.findOneAndDelete({ _id: id, creator: req.userId });
+            clearImage(deletedPost.imageUrl);
+        } catch (err) {
             const error = new Error("Post not find or You are not authorized");
             error.status = 404;
             throw error;
         }
-
         return true;
+    },
+    async user(args, req) {
+        if (!req.isAuth) {
+            const error = new Error("Not Authenticated");
+            error.code = 401;
+            throw error;
+        }
+        const user = await User.findById(req.userId);
+        if (!user) {
+            const error = new Error("User not find");
+            error.status = 404;
+            throw error;
+        }
+        return { ...user._doc, _id: user._id.toString() };
+    },
+
+    async updateStatus({ status }, req) {
+        if (!req.isAuth) {
+            const error = new Error("Not Authenticated");
+            error.code = 401;
+            throw error;
+        }
+        const user = await User.findByIdAndUpdate(req.userId, { status });
+        if (!user) {
+            const error = new Error("User not find");
+            error.status = 404;
+            throw error;
+        }
+        return { ...user._doc, _id: user._id.toString() };
     },
 };

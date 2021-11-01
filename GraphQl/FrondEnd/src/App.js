@@ -27,6 +27,7 @@ class App extends Component {
     componentDidMount() {
         const token = localStorage.getItem("token");
         const expiryDate = localStorage.getItem("expiryDate");
+        console.log(expiryDate);
         if (!token || !expiryDate) {
             return;
         }
@@ -73,9 +74,6 @@ class App extends Component {
         })
             .then(res => res.json())
             .then(resData => {
-                if (resData.errors && resData.errors[0].status === 401) {
-                    throw new Error("Validation failed.Make sure the email addres is not used yet");
-                }
                 if (resData.errors) {
                     throw new Error("User creation failed");
                 }

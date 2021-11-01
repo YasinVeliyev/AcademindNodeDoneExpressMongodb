@@ -24,21 +24,29 @@ class Feed extends Component {
     };
 
     componentDidMount() {
-        // fetch("http://localhost:8080/auth/status", {
-        //     headers: {
-        //         Authorization: "Bearer " + this.props.token,
-        //     },
-        // })
-        //     .then(res => {
-        //         if (res.status !== 200) {
-        //             throw new Error("Failed to fetch user status.");
-        //         }
-        //         return res.json();
-        //     })
-        //     .then(resData => {
-        //         this.setState({ status: resData.status });
-        //     })
-        //     .catch(this.catchError);
+        const graphqlQuery = {
+            query: `
+            {user{status}}`,
+        };
+        fetch(this.state.url, {
+            method: "POST",
+            headers: {
+                Authorization: "Bearer " + this.props.token,
+                "Content-type": "application/json",
+            },
+            body: JSON.stringify(graphqlQuery),
+        })
+            .then(res => {
+                return res.json();
+            })
+            .then(resData => {
+                console.log(resData);
+                if (resData.errors) {
+                    throw new Error("User not found");
+                }
+                this.setState({ status: resData.data.user.status });
+            })
+            .catch(this.catchError);
 
         this.loadPosts();
     }
@@ -107,24 +115,29 @@ class Feed extends Component {
     };
 
     statusUpdateHandler = event => {
+        let graphqlQuery = {
+            query: `
+                mutation {
+                    updateStatus(status:"${this.state.status}"){status}
+                }
+            `,
+        };
         event.preventDefault();
-        fetch("http://localhost:8080/auth/status", {
-            method: "PATCH",
+        fetch(this.state.url, {
+            method: "POST",
             headers: {
                 Authorization: "Bearer " + this.props.token,
                 "Content-Type": "application/json",
             },
-            body: JSON.stringify({
-                status: this.state.status,
-            }),
+            body: JSON.stringify(graphqlQuery),
         })
             .then(res => {
-                if (res.status !== 200 && res.status !== 201) {
-                    throw new Error("Can't update status!");
-                }
                 return res.json();
             })
             .then(resData => {
+                if (resData.errors) {
+                    throw new Error("User not found");
+                }
                 console.log(resData);
             })
             .catch(this.catchError);
@@ -231,9 +244,6 @@ class Feed extends Component {
             })
             .then(resData => {
                 console.log(resData);
-                if (resData.errors && resData.errors[0].status === 401) {
-                    throw new Error("Validation failed.Make sure the email addres is not used yet");
-                }
                 if (resData.errors) {
                     throw new Error("Post creation failed");
                 }
@@ -261,6 +271,7 @@ class Feed extends Component {
                         editLoading: false,
                     };
                 });
+                this.loadPosts();
             })
             .catch(err => {
                 console.log(err);
@@ -278,20 +289,29 @@ class Feed extends Component {
     };
 
     deletePostHandler = postId => {
+        let graphqlQuery = {
+            query: `
+                mutation {
+                    deletePost(id:"${1}")
+                }
+            `,
+        };
         this.setState({ postsLoading: true });
-        fetch("http://localhost:8080/feed/post/" + postId, {
-            method: "DELETE",
+        fetch(this.state.url, {
+            method: "POST",
             headers: {
+                "Content-Type": "application/json",
                 Authorization: "Bearer " + this.props.token,
             },
+            body: JSON.stringify(graphqlQuery),
         })
             .then(res => {
-                if (res.status !== 200 && res.status !== 201) {
-                    throw new Error("Deleting a post failed!");
-                }
                 return res.json();
             })
             .then(resData => {
+                if (resData.errors) {
+                    throw new Error(resData.errors[0].message);
+                }
                 console.log(resData);
                 this.loadPosts();
                 // this.setState(prevState => {

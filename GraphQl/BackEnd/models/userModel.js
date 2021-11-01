@@ -47,7 +47,7 @@ userSchema.method("checkPassword", function (password) {
 
 userSchema.method("generateToken", function () {
     return jwt.sign({ userId: this._id.toString(), email: this.email, status: this.status }, "somesupersecretsecret", {
-        expiresIn: "1h",
+        expiresIn: "2h",
     });
 });
 
