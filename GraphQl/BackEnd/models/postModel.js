@@ -27,5 +27,8 @@ postSchema.pre(/^find/, async function (next) {
     this.populate("creator");
     return next();
 });
+postSchema.post("save", async function (doc) {
+    return doc.populate("creator");
+});
 
 module.exports = mongoose.model("Post", postSchema);

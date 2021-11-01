@@ -12,6 +12,8 @@ const io = require("../socket");
 //         console.log(data);
 //     }
 // });
+let post = await Post.findOne({ _id: "617edd25d6e9b4b36b30e15a", "creator._id": "6179986663790a796cb1ef81" });
+console.log(post);
 
 exports.getPosts = async (req, res, next) => {
     const currentPage = req.query.page || 1;

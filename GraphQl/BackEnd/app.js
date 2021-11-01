@@ -2,11 +2,14 @@ const express = require("express");
 const mongoose = require("mongoose");
 const multer = require("multer");
 const path = require("path");
+const fs = require("fs");
 const cors = require("cors");
 const { graphqlHTTP } = require("express-graphql");
 
 const graphqlSchema = require("./graphql/schema");
 const graphqlResolver = require("./graphql/resolvers");
+const auth = require("./middleware/auth");
+const { clearImage } = require("./util/file");
 
 const app = express();
 const fileStorage = multer.diskStorage({
@@ -50,10 +53,25 @@ app.use((error, req, res, next) => {
     res.status(status).json({ message: message });
 });
 
+app.use(auth);
+app.put("/post-image", (req, res, next) => {
+    let filePath = req.file?.path || req.body.oldPath;
+    if (!req.isAuth) {
+        throw new Error("Not Authenticated");
+    }
+    if (!req.file && !req.body.oldPath) {
+        throw new Error("No file provided");
+    }
+    if (req.body.oldPath) {
+        clearImage(req.body.oldPath);
+    }
+
+    return res.status(201).json({ message: "File stored", filePath });
+});
+
 app.use(
     "/graphql",
     (req, res, next) => {
-        console.log(req.method);
         next();
     },
     graphqlHTTP({
@@ -77,7 +95,7 @@ app.use(
 
 mongoose
     .connect("mongodb://localhost:27017/graphql?readPreference=primary&appname=MongoDB%20Compass&ssl=false")
-    .then(result => {
+    .then(() => {
         const server = app.listen(8080);
     })
     .catch(err => console.log(err));
