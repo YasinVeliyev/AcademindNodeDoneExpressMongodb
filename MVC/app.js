@@ -8,6 +8,11 @@ const csurf = require("csurf");
 const flash = require("connect-flash");
 const multer = require("multer");
 require("dotenv").config();
+const helmet = require("helmet");
+const compress = require("compression");
+const morgan = require("morgan");
+const fs = require("fs");
+const https = require("https");
 
 const UserMongooseModel = require("./models/mongoose/userMongooseModel");
 const { sequelize } = require("./util/database");
@@ -60,6 +65,12 @@ const fileFilter = (req, file, cb) => {
 };
 
 const csrfProtection = csurf({ cookie: true });
+const accessLogStream = fs.createWriteStream(path.join(__dirname, "access.log"), { flags: "a" });
+const privateKey = fs.readFileSync("server.key");
+const certificate = fs.readFileSync("server.cert");
+app.use(helmet());
+app.use(compress());
+app.use(morgan("combined", { stream: accessLogStream }));
 app.use(flash());
 app.set("view engine", "ejs");
 app.set("views", "views");
@@ -104,6 +115,7 @@ mongoose.connect("mongodb://localhost:27017/shop", err => {
     } else {
         console.warn("Connected");
 
+        // https.createServer({ key: privateKey, cert: certificate }, app).listen(3000);
         app.listen(3000);
     }
 });
