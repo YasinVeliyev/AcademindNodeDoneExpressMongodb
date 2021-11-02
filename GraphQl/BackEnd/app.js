@@ -5,6 +5,7 @@ const path = require("path");
 const fs = require("fs");
 const cors = require("cors");
 const { graphqlHTTP } = require("express-graphql");
+const helmet = require("helmet");
 
 const graphqlSchema = require("./graphql/schema");
 const graphqlResolver = require("./graphql/resolvers");
@@ -12,6 +13,7 @@ const auth = require("./middleware/auth");
 const { clearImage } = require("./util/file");
 
 const app = express();
+app.use(helmet());
 const fileStorage = multer.diskStorage({
     destination: (req, file, cb) => {
         cb(null, "images");
