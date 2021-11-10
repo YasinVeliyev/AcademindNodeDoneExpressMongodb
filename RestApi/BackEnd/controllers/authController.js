@@ -22,9 +22,7 @@ exports.login = async (req, res, next) => {
     try {
         let user = await User.findOne({ email });
         if (user && user.checkPassword(password)) {
-            const token = jwt.sign({ email, userId: user._id.toString(), status: user.status }, "secret", {
-                expiresIn: "1h",
-            });
+            const token = user.generateToken();
             res.status(200).json({ token, userId: user._id.toString() });
         } else {
             const error = new Error("User is not exist or Wrong password");
